@@ -76,7 +76,7 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
   };
 
   return (
-    <main className="bg-black">
+    <main className="bg-wall">
       {/* The photo — always fully visible, never covered by any overlay. */}
       <motion.div className="fixed inset-0 -z-10" style={{ scale: bgScale }}>
         <GalleryBackground

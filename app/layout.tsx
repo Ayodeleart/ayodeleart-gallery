@@ -27,6 +27,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+      <head>
+        <link rel="preload" as="image" href="/hero/hero-desktop.webp" media="(min-width: 768px)" />
+        <link rel="preload" as="image" href="/hero/hero-mobile.webp" media="(max-width: 767px)" />
+      </head>
       <body className="font-body">{children}</body>
     </html>
   );

@@ -58,7 +58,13 @@ export default function GalleryBackground({
   return (
     <div ref={containerRef} className={`absolute inset-0 ${visibilityClass}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      <img
+        src={src}
+        alt=""
+        loading="eager"
+        fetchPriority="high"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
 
       {frames.map((f, i) => {
         const left = rect.offsetX + f.x0 * imgW * rect.scale;
