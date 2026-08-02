@@ -3,28 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, MotionValue } from "framer-motion";
 
-type FrameSlot = {
-  // fractions (0-1) of the *original* photo's pixel dimensions
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-};
+type FrameSlot = { x0: number; y0: number; x1: number; y1: number };
 
 type Props = {
   src: string;
   imgW: number;
   imgH: number;
-  visibilityClass: string; // e.g. "hidden md:block" or "block md:hidden"
+  visibilityClass: string;
   frames: FrameSlot[];
   framedArtworkUrls: (string | null)[];
   frameOpacity: MotionValue<number>;
   onSelectFrame: (index: number) => void;
 };
 
-// Replicates the browser's object-fit:cover math in JS so overlay elements
-// (the artwork composited into each blank canvas) line up with the actual
-// photo content pixel-for-pixel, at any viewport size.
+// Replicates the browser's object-fit:cover math in JS so the artwork
+// composited into each blank canvas lines up with the photo pixel-for-pixel
+// at any viewport size.
 export default function GalleryBackground({
   src,
   imgW,
@@ -46,9 +40,11 @@ export default function GalleryBackground({
       const ch = el.clientHeight;
       if (!cw || !ch) return;
       const scale = Math.max(cw / imgW, ch / imgH);
-      const renderedW = imgW * scale;
-      const renderedH = imgH * scale;
-      setRect({ scale, offsetX: (cw - renderedW) / 2, offsetY: (ch - renderedH) / 2 });
+      setRect({
+        scale,
+        offsetX: (cw - imgW * scale) / 2,
+        offsetY: (ch - imgH * scale) / 2,
+      });
     }
     recalc();
     window.addEventListener("resize", recalc);
@@ -76,18 +72,11 @@ export default function GalleryBackground({
         return (
           <motion.button
             key={i}
+            type="button"
             aria-label="View artwork"
             onClick={() => artUrl && onSelectFrame(i)}
-            style={{
-              position: "absolute",
-              left,
-              top,
-              width,
-              height,
-              opacity: frameOpacity,
-              cursor: artUrl ? "pointer" : "default",
-            }}
-            className="overflow-hidden"
+            style={{ position: "absolute", left, top, width, height, opacity: frameOpacity }}
+            className="overflow-hidden bg-transparent border-none p-0 appearance-none"
           >
             {artUrl && (
               // eslint-disable-next-line @next/next/no-img-element
