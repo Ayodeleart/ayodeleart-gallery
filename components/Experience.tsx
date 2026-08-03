@@ -31,6 +31,12 @@ const MOBILE_FRAMES = [
   { x0: 0.441, y0: 0.352, x1: 0.548, y1: 0.476 }, // center back wall
 ];
 
+// Where the wall meets the floor in each photo (measured directly from the
+// images) — the people cutout's feet get pinned exactly here, not wherever
+// flexbox happened to land it.
+const DESKTOP_PEOPLE = { xCenter: 0.5, yBottom: 0.68, widthFrac: 0.5 };
+const MOBILE_PEOPLE = { xCenter: 0.5, yBottom: 0.56, widthFrac: 0.62 };
+
 export default function Experience({ artworks, heroDesktop, heroMobile, heroPeople }: Props) {
   const pinRef = useRef<HTMLDivElement>(null); // spans hero + gallery, sticky photo lives inside
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -42,9 +48,9 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
   // Foreground (title, people, framed artwork) fades out over the first
   // ~40% of the pinned scroll range. The photo itself is never touched.
   const foregroundOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
-  const peopleY = useTransform(scrollYProgress, [0, 0.4], [0, 40]);
-  // Very subtle continuous push-in across the whole pinned range.
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+  // Starts zoomed in (closer to the room), eases out to 1 as you scroll —
+  // "camera pulling back" rather than a subtle push-in.
+  const bgScale = useTransform(scrollYProgress, [0, 0.5], [1.45, 1]);
 
   const selected = artworks.find((a) => a.id === selectedId) || null;
   const leftArt = artworks.find((a) => a.frame_position === "left") ?? null;
@@ -91,6 +97,10 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
             framedArtworkUrls={framedUrls}
             frameOpacity={foregroundOpacity}
             onSelectFrame={onFrameSelect}
+            peopleSrc={heroPeople}
+            peopleSlot={DESKTOP_PEOPLE}
+            peopleAspect={PEOPLE_IMG.w / PEOPLE_IMG.h}
+            peopleOpacity={foregroundOpacity}
           />
           <GalleryBackground
             src={heroMobile}
@@ -101,12 +111,16 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
             framedArtworkUrls={framedUrls}
             frameOpacity={foregroundOpacity}
             onSelectFrame={onFrameSelect}
+            peopleSrc={heroPeople}
+            peopleSlot={MOBILE_PEOPLE}
+            peopleAspect={PEOPLE_IMG.w / PEOPLE_IMG.h}
+            peopleOpacity={foregroundOpacity}
           />
         </motion.div>
 
-        {/* Hero foreground: absolutely positioned over the top of the pinned
-            region, in normal flow (scrolls away naturally, not fixed/sticky
-            itself), so it reveals the photo as the user scrolls. */}
+        {/* Hero foreground: title + scroll hint only now. The people cutout
+            lives inside GalleryBackground so it can be pinned to the actual
+            floor line and scale together with the room's zoom. */}
         <div className="absolute inset-x-0 top-0 h-screen flex flex-col items-center justify-between pointer-events-none z-10">
           <motion.h1
             style={{ opacity: foregroundOpacity }}
@@ -114,19 +128,6 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
           >
             Ayodele<span className="text-brass not-italic">art</span>
           </motion.h1>
-
-          <motion.div
-            style={{ opacity: foregroundOpacity, y: peopleY }}
-            className="relative w-[92vw] md:w-[80vw] mb-4"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={heroPeople}
-              alt=""
-              className="w-full h-auto"
-              style={{ aspectRatio: `${PEOPLE_IMG.w} / ${PEOPLE_IMG.h}` }}
-            />
-          </motion.div>
 
           <motion.p
             style={{ opacity: foregroundOpacity }}
