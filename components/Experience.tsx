@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import type { ArtworkWithImages } from "@/lib/data";
 import GalleryBackground from "./GalleryBackground";
+import PeopleLayer from "./PeopleLayer";
 
 type Props = {
   artworks: ArtworkWithImages[];
@@ -45,12 +46,14 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
 
   const { scrollYProgress } = useScroll({ target: pinRef, offset: ["start start", "end end"] });
 
-  // Foreground (title, people, framed artwork) fades out over the first
-  // ~40% of the pinned scroll range. The photo itself is never touched.
+  // Foreground (title, framed artwork, people) fades out over the first
+  // ~40% of the pinned scroll range. The photo/environment is never
+  // touched — no shared scale group. People are their own depth layer with
+  // a small independent drift, distinct from the environment's own (zero)
+  // motion, which is what actually reads as parallax/depth rather than
+  // everything moving together.
   const foregroundOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
-  // Starts zoomed in (closer to the room), eases out to 1 as you scroll —
-  // "camera pulling back" rather than a subtle push-in.
-  const bgScale = useTransform(scrollYProgress, [0, 0.5], [1.45, 1]);
+  const peopleParallaxY = useTransform(scrollYProgress, [0, 1], [0, 26]);
 
   const selected = artworks.find((a) => a.id === selectedId) || null;
   const leftArt = artworks.find((a) => a.frame_position === "left") ?? null;
@@ -87,7 +90,8 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
           it afterwards. No hero background color, no overlay — this IS the
           page. */}
       <div ref={pinRef} className="relative">
-        <motion.div className="sticky top-0 h-screen w-full overflow-hidden" style={{ scale: bgScale }}>
+        <div className="sticky top-0 h-screen w-full overflow-hidden">
+          {/* Environment layer: photo + frames, rigid, no transform */}
           <GalleryBackground
             src={heroDesktop}
             imgW={DESKTOP_IMG.w}
@@ -97,10 +101,6 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
             framedArtworkUrls={framedUrls}
             frameOpacity={foregroundOpacity}
             onSelectFrame={onFrameSelect}
-            peopleSrc={heroPeople}
-            peopleSlot={DESKTOP_PEOPLE}
-            peopleAspect={PEOPLE_IMG.w / PEOPLE_IMG.h}
-            peopleOpacity={foregroundOpacity}
           />
           <GalleryBackground
             src={heroMobile}
@@ -111,12 +111,31 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
             framedArtworkUrls={framedUrls}
             frameOpacity={foregroundOpacity}
             onSelectFrame={onFrameSelect}
-            peopleSrc={heroPeople}
-            peopleSlot={MOBILE_PEOPLE}
-            peopleAspect={PEOPLE_IMG.w / PEOPLE_IMG.h}
-            peopleOpacity={foregroundOpacity}
           />
-        </motion.div>
+
+          {/* Foreground actor layer: independent from the environment above,
+              anchored to the measured floor line, with its own subtle drift */}
+          <PeopleLayer
+            src={heroPeople}
+            imgW={DESKTOP_IMG.w}
+            imgH={DESKTOP_IMG.h}
+            visibilityClass="hidden md:block"
+            slot={DESKTOP_PEOPLE}
+            aspect={PEOPLE_IMG.w / PEOPLE_IMG.h}
+            opacity={foregroundOpacity}
+            parallaxY={peopleParallaxY}
+          />
+          <PeopleLayer
+            src={heroPeople}
+            imgW={MOBILE_IMG.w}
+            imgH={MOBILE_IMG.h}
+            visibilityClass="block md:hidden"
+            slot={MOBILE_PEOPLE}
+            aspect={PEOPLE_IMG.w / PEOPLE_IMG.h}
+            opacity={foregroundOpacity}
+            parallaxY={peopleParallaxY}
+          />
+        </div>
 
         {/* Hero foreground: title + scroll hint only now. The people cutout
             lives inside GalleryBackground so it can be pinned to the actual
