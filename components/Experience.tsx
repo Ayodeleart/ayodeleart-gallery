@@ -15,16 +15,20 @@ type Props = {
 // Coordinates measured directly from the reference photos (fractions of the
 // original pixel dimensions) — where the two blank canvases actually sit.
 const DESKTOP_IMG = { w: 1672, h: 941 };
-const MOBILE_IMG = { w: 941, h: 1672 };
+const MOBILE_IMG = { w: 1024, h: 1536 };
 const PEOPLE_IMG = { w: 1024, h: 1536 };
 
 const DESKTOP_FRAMES = [
   { x0: 0.023, y0: 0.16, x1: 0.229, y1: 0.676 }, // left wall
   { x0: 0.759, y0: 0.171, x1: 0.96, y1: 0.685 }, // right wall
 ];
+// New mobile photo has four side frames plus a spotlit center back wall.
+// Using the inner-left/inner-right frames (clearest, most head-on) and the
+// middle back-wall spotlight as the center slot.
 const MOBILE_FRAMES = [
-  { x0: 0.037, y0: 0.222, x1: 0.179, y1: 0.55 }, // left
-  { x0: 0.82, y0: 0.221, x1: 0.963, y1: 0.602 }, // right
+  { x0: 0.155, y0: 0.32, x1: 0.204, y1: 0.482 }, // inner-left
+  { x0: 0.785, y0: 0.322, x1: 0.836, y1: 0.491 }, // inner-right
+  { x0: 0.441, y0: 0.352, x1: 0.548, y1: 0.476 }, // center back wall
 ];
 
 export default function Experience({ artworks, heroDesktop, heroMobile, heroPeople }: Props) {
@@ -45,7 +49,8 @@ export default function Experience({ artworks, heroDesktop, heroMobile, heroPeop
   const selected = artworks.find((a) => a.id === selectedId) || null;
   const leftArt = artworks.find((a) => a.frame_position === "left") ?? null;
   const rightArt = artworks.find((a) => a.frame_position === "right") ?? null;
-  const framedArt = [leftArt, rightArt];
+  const centerArt = artworks.find((a) => a.frame_position === "center") ?? null;
+  const framedArt = [leftArt, rightArt, centerArt];
   const framedUrls = framedArt.map((a) => a?.image_url ?? null);
 
   const onFrameSelect = (i: number) => {
